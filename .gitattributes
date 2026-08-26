@@ -1,0 +1,11 @@
+# Shell skripty MUSÍ mít LF. S CRLF selže shebang na Linuxu i v CI
+# hláškou "bad interpreter: /bin/sh^M" — a hooky by se tiše přestaly spouštět.
+*.sh text eol=lf
+
+# Python hooky a manifesty drž taky na LF, ať se diff nechová podle toho,
+# kdo commitoval z Windows.
+*.py text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf

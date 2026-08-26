@@ -1,6 +1,5 @@
 {
-  "_comment": "Token Economy Kit — hooks blok ke SLOUČENÍ do ~/.claude/settings.json. NAHRAĎ <CLAUDE_DIR> absolutní cestou k ~/.claude (na Windows použij lomítka /, např. C:/Users/pepa/.claude). Nepřepisuj existující settings.json — slučuj do pole u každé události. Klíč _comment před vložením smaž.",
-
+  "_comment": "Token Economy Kit — hooks blok ke SLOUČENÍ do ~/.claude/settings.json. NAHRAĎ <CLAUDE_DIR> absolutní cestou k ~/.claude (na Windows použij lomítka /, např. C:/Users/pepa/.claude). Nepřepisuj existující settings.json — slučuj do pole u každé události. Kdyby se u tebe interpret jmenoval python3 a ne python, nahraď i to (plugin verze si to řeší sama přes bin/hook.sh, ruční instalace ne). Klíč _comment před vložením smaž.",
   "hooks": {
     "SessionStart": [
       {
@@ -14,7 +13,6 @@
         ]
       }
     ],
-
     "UserPromptSubmit": [
       {
         "hooks": [
@@ -26,7 +24,6 @@
         ]
       }
     ],
-
     "PreToolUse": [
       {
         "matcher": "*",
@@ -99,7 +96,6 @@
         ]
       }
     ],
-
     "PostToolUse": [
       {
         "matcher": "*",
@@ -122,7 +118,6 @@
         ]
       }
     ],
-
     "PostCompact": [
       {
         "hooks": [

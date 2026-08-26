@@ -1,0 +1,19 @@
+name: ledger-survives-clear
+tags: ["hooks", "session-start", "ledger"]
+runs: 3
+max_turns: 2
+timeout_seconds: 120
+model: "claude-haiku-4-5-20251001"
+
+# Žádné tooly. To je celý trik tohohle casu: model si ledger NEMŮŽE přečíst
+# z disku, takže jediná cesta, jak se o tasku dozvědět, je injekce od hooku.
+# Baseline arm (běh bez pluginu) tím pádem odpovědět nemůže a A/B je čisté.
+allowed_tools: []
+
+context:
+  scaffold_script: ./scaffold.sh
+
+prompt: |
+  Na čem se v tomhle repozitáři zrovna pracuje?
+  Odpověz jednou větou: jméno rozdělaného tasku a co je další krok.
+  Pokud to nevíš, napiš přesně NEVÍM.

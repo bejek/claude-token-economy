@@ -1,12 +1,22 @@
 {
   "name": "token-economy",
   "description": "Hooky, které hlídají velikost session a nutí model šetřit kontext: varování na růst kontextu, guard proti runaway smyčkám, model-routing pro subagenty, spawn gate, ledger disciplína a injekce session ledgeru po /clear.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "author": {
     "name": "bejek"
   },
   "homepage": "https://github.com/bejek/claude-token-economy",
   "repository": "https://github.com/bejek/claude-token-economy",
   "license": "MIT",
-  "keywords": ["hooks", "context", "tokens", "cost", "guardrails", "session-ledger"]
+  "keywords": [
+    "hooks",
+    "context",
+    "tokens",
+    "cost",
+    "guardrails",
+    "session-ledger"
+  ],
+  "experimental": {
+    "evals": "evals"
+  }
 }

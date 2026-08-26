@@ -1,0 +1,63 @@
+name: eval
+
+# Eval suite stojí peníze a čas, takže neběží na každý push.
+# Ruční spuštění + před vydáním tagu.
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "token-economy--v*"
+
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Runner má python3, ale ne python. Přesně ten případ, kvůli kterému
+      # existuje bin/hook.sh — tenhle job je tím pádem i regresní test
+      # detekce interpretu na non-Windows systému.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Sanity — hooky se spustí a fail-open drží
+        run: bash tests/smoke.sh
+
+      - name: Instaluj Claude Code
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Validuj manifesty
+        run: |
+          claude plugin validate .claude-plugin/plugin.json
+          claude plugin validate .
+
+      # ⚠️ `claude plugin eval` je early access a zapíná se per organizace.
+      # Dokud ho tenhle účet nemá, krok se přeskočí místo aby shodil build.
+      - name: Eval suite (A/B s pluginem a bez něj)
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          if [ -z "${ANTHROPIC_API_KEY:-}" ]; then
+            echo "::warning::ANTHROPIC_API_KEY není nastavený — eval přeskakuji"
+            exit 0
+          fi
+          set +e
+          out=$(claude plugin eval . --json eval-results.json --no-publish 2>&1)
+          code=$?
+          set -e
+          echo "$out"
+          if [ "$code" -ne 0 ] && printf '%s' "$out" | grep -q "early access"; then
+            echo "::warning::plugin eval není pro tenhle účet zapnutý — přeskakuji"
+            exit 0
+          fi
+          exit "$code"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: eval-results
+          path: |
+            eval-results.json
+            evals/results/
+          if-no-files-found: ignore

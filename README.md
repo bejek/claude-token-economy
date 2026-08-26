@@ -189,8 +189,8 @@ hooky sice fajrují, ale model neví, co s jejich hláškami dělat.
 
 ### Ruční instalace
 
-Když nechceš plugin, chceš si vybrat jen některé hooky, nebo máš `python3`
-místo `python` (viz předpoklady níž): otevři Claude Code v adresáři kitu a řekni
+Když nechceš plugin nebo si chceš vybrat jen některé hooky:
+otevři Claude Code v adresáři kitu a řekni
 
 ```
 Nainstaluj mi Token Economy Kit podle INSTALL.md.
@@ -201,12 +201,13 @@ sloučení `settings.json` a ověření, že hooky fajrují. Čitelný je i pro 
 
 ### Předpoklady
 
-- **Python 3 v `PATH` pod jménem `python`.** Hooky jsou čistý stdlib, žádné
-  závislosti a žádný `pip install`.
-- ⚠️ **Systémy, kde je jen `python3` a ne `python`** (typicky Linux a část
-  macOS): plugin verze tam hooky tiše neodpálí, protože příkazy v
-  `hooks/hooks.json` volají `python`. Použij ruční instalaci a nahraď `python`
-  za `python3`. Ověř si to jedním příkazem: `python --version`.
+**Python 3.8+.** Hooky jsou čistý stdlib — žádný `pip install`, žádné závislosti.
+
+Nemusíš řešit, jestli se u tebe interpret jmenuje `python` nebo `python3`.
+Plugin spouští hooky přes `bin/hook.sh`, který kandidáty **ověřuje spuštěním**,
+ne přes `command -v` — takže si poradí i s tou 0bajtovou atrapou `python3`,
+kterou Windows podstrkuje z Microsoft Storu. Když interpret nenajde vůbec,
+hooky se tiše přeskočí a Claude Code jede dál (fail-open).
 
 ---
 
@@ -279,3 +280,36 @@ závazků, Telegram notifikace, orchestrační vlny, semantické hledání, clos
 ritual, statusline. Sada je jádro, které funguje samo o sobě.
 
 Detailní naměřená data a metodika: `docs/mereni.md`.
+
+---
+
+## 8. Důkazy — co si můžeš ověřit sám
+
+Tvrzení „šetří to tokeny" je levné. V repu jsou proto dvě věci, kterými se dá
+zatlačit zpátky.
+
+**Smoke test** (nepotřebuje API klíč ani Claude Code, běží v sekundách):
+
+```bash
+sh tests/smoke.sh
+```
+
+Ověří, že launcher najde interpret, že každý hook je fail-open na nesmyslném
+vstupu, že guard opravdu blokuje **a** že nezablokuje volání, které je v pořádku.
+Ten poslední bod je důležitý — guard, který dělá falešné poplachy, tě stojí víc,
+než kolik ušetří.
+
+**Eval suite** — tři casy, které měří, jestli plugin **mění chování modelu**:
+
+```bash
+claude plugin eval .
+```
+
+Cílem je cesta k pluginu, ne k `evals/` — tím se zapne baseline arm a každý case
+se spustí dvakrát, s pluginem a bez něj. Podrobnosti a jak číst výsledek:
+`evals/README.md`.
+
+> ⚠️ `claude plugin eval` je zatím **early access** a zapíná se per organizace.
+> Suite je napsaná podle schématu, ale **nebyla spuštěna** — bez zapnutého
+> evalu příkaz jen vypíše `plugin eval is currently in early access`.
+> Než ji zapojíš do CI, pusť ji jednou lokálně.

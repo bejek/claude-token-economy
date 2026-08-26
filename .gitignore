@@ -9,3 +9,7 @@ __pycache__/
 # OS
 Thumbs.db
 .DS_Store
+
+# Výsledky eval běhů — generované, nepatří do repa
+evals/results/
+eval-results.json

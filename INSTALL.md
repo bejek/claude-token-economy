@@ -7,8 +7,9 @@
 > 💡 **Většina lidí sem nemusí.** Standardní cesta je plugin:
 > `/plugin marketplace add bejek/claude-token-economy` a
 > `/plugin install token-economy`. Ruční instalace dává smysl jen když
-> (a) chceš vybrat jen některé hooky, (b) máš `python3` a ne `python`, nebo
-> (c) chceš mít skripty pod vlastní kontrolou a upravovat si je.
+> (a) chceš vybrat jen některé hooky, nebo (b) chceš mít skripty pod vlastní
+> kontrolou a upravovat si je. (Jméno interpretu řešit nemusíš — plugin si
+> `python` vs `python3` rozřeší sám, viz `bin/hook.sh`.)
 > **I po instalaci pluginu tě ale čekají kroky 5 a 6 níž** — prahy podle
 > kontextového okna a sekce v `CLAUDE.md`. Ty plugin udělat nemůže.
 > Kroky 1–4 (kopírování skriptů a sloučení `settings.json`) při pluginu
