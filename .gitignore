@@ -1,0 +1,11 @@
+# Session ledger je pracovní ŠTÍTEK jedné session — nepatří do distribuovaného pluginu
+docs/session-ledger.md
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+
+# OS
+Thumbs.db
+.DS_Store

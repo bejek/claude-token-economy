@@ -1,0 +1,26 @@
+{
+  "name": "claude-token-economy",
+  "owner": {
+    "name": "bejek",
+    "url": "https://github.com/bejek"
+  },
+  "metadata": {
+    "description": "Token Economy Kit — hooky pro Claude Code, které drží velikost session (a tím cenu) pod kontrolou.",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "token-economy",
+      "description": "Hooky, které hlídají velikost session a nutí model šetřit kontext: varování na růst kontextu, guard proti runaway smyčkám, model-routing pro subagenty, spawn gate, ledger disciplína a injekce session ledgeru po /clear.",
+      "source": "./",
+      "version": "0.1.0",
+      "author": {
+        "name": "bejek",
+        "url": "https://github.com/bejek"
+      },
+      "category": "productivity",
+      "homepage": "https://github.com/bejek/claude-token-economy",
+      "strict": false
+    }
+  ]
+}
