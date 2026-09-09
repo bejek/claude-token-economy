@@ -34,6 +34,8 @@ jobs:
 
       # ⚠️ `claude plugin eval` je early access a zapíná se per organizace.
       # Dokud ho tenhle účet nemá, krok se přeskočí místo aby shodil build.
+      # `--scaffold` je povinný: scaffold skripty jsou defaultně vypnuté,
+      # bez něj by dva ze tří casů běžely bez fixture.
       - name: Eval suite (A/B s pluginem a bez něj)
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
@@ -43,7 +45,7 @@ jobs:
             exit 0
           fi
           set +e
-          out=$(claude plugin eval . --json eval-results.json --no-publish 2>&1)
+          out=$(claude plugin eval . --scaffold --json eval-results.json --no-publish 2>&1)
           code=$?
           set -e
           echo "$out"
