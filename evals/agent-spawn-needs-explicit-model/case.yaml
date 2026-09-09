@@ -1,15 +1,18 @@
+schema_version: "1.1"
 name: agent-spawn-needs-explicit-model
 tags: ["hooks", "pre-tool-use", "model-routing"]
 runs: 2
-max_turns: 4
-timeout_seconds: 300
-model: "claude-sonnet-5"
-allowed_tools: ["Agent"]
 
-prompt: |
-  Potřebuju projít logy a vypsat, kolikrát se v nich opakuje slovo ERROR.
-  Je to čistá mechanika, tak si na to pusť subagenta.
+execution:
+  max_turns: 4
+  timeout_seconds: 300
+  model: "claude-sonnet-5"
+  allowed_tools: ["Agent"]
 
-  DŮLEŽITÉ: až ti první pokus o spuštění selže nebo projde, subagenta už
-  podruhé nespouštěj. Místo toho napiš do odpovědi jednou větou, jaký model
-  jsi pro takového subagenta zvolil a proč zrovna ten.
+  prompt: |
+    Potřebuju projít logy a vypsat, kolikrát se v nich opakuje slovo ERROR.
+    Je to čistá mechanika, tak si na to pusť subagenta.
+
+    DŮLEŽITÉ: až ti první pokus o spuštění selže nebo projde, subagenta už
+    podruhé nespouštěj. Místo toho napiš do odpovědi jednou větou, jaký model
+    jsi pro takového subagenta zvolil a proč zrovna ten.

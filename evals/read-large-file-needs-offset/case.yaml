@@ -1,15 +1,18 @@
+schema_version: "1.1"
 name: read-large-file-needs-offset
 tags: ["hooks", "pre-tool-use", "read-guard"]
 runs: 2
-max_turns: 6
-timeout_seconds: 300
-model: "claude-sonnet-5"
-allowed_tools: ["Read", "Grep", "Glob"]
 
 context:
   scaffold_script: ./scaffold.sh
 
-prompt: |
-  V souboru `src/big_module.py` je funkce `spocitej_dan`.
-  Zjisti, co přesně dělá, a popiš to včetně toho, jak se chová
-  pro záporný základ.
+execution:
+  max_turns: 6
+  timeout_seconds: 300
+  model: "claude-sonnet-5"
+  allowed_tools: ["Read", "Grep", "Glob"]
+
+  prompt: |
+    V souboru `src/big_module.py` je funkce `spocitej_dan`.
+    Zjisti, co přesně dělá, a popiš to včetně toho, jak se chová
+    pro záporný základ.
