@@ -57,3 +57,25 @@ aby eval kdy běžel**.
 Když je feature za bránou, „nedá se nic dělat" bývá lež. Klient, který ta data
 validuje, je na disku. Nešlo ověřit *chování*, ale šlo ověřit *kontrakt* —
 a všech 13 nalezených odchylek bylo v kontraktu.
+
+## Dodatek 2026-09-11: gate pořád zavřená, a `--help` o ní nic neříká
+
+Zkoušeno na CLI **2.1.268** (o dvě verze výš než 2.1.266 z původního nálezu).
+`claude plugin eval . --case ledger-survives-clear --no-publish` → `plugin eval is
+currently in early access`, exit 1. Žádný JSON se nezapíše, gate padá dřív, než
+case naběhne — u všech tří cases stejně.
+
+**Past, na kterou jsem naletěl při plánování vlny 09-11:** `claude plugin eval
+--help` vypíše kompletní nápovědu (všechny flagy: `--ablation`, `--allow-tools`,
+`--case`, `--eval-dir`, `--judge-model`, `--max-cost-usd`, `--mocks`, `--runs`,
+`--threshold` …) **i při zavřené gate** — help se registruje dřív než early-access
+kontrola. Odpovídající `--help` proto NENÍ důkaz, že je feature zapnutá. Jediný
+platný test je reálný běh.
+
+`claude doctor`: účet Pro/Max, „Organization policy: not applicable to Pro and Max
+accounts". Flag je server-side per organizace, z klienta neobejitelný — žádná env
+proměnná, žádný lokální override.
+
+Stav kontraktu se nemění: schéma `case.yaml` + gradery jsou srovnané (82883a7) a
+čekají. Ověřený je kontrakt, **ne chování** — ablation delta pluginu je pořád
+neznámá.
