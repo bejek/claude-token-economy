@@ -17,13 +17,13 @@ Subagenti svych 150-200k utratili tak jako tak; `/clear` je nevraci.
 
 Reseni neni prisnejsi STOP, ale posunout branu k NAJEZDU:
 
-  ctx < 150k            -> ticho
-  150k <= ctx < 175k    -> DENY, dokud spawn nenese marker MARKER (viz nize).
+  ctx < 200k            -> ticho
+  200k <= ctx < 230k    -> DENY, dokud spawn nenese marker MARKER (viz nize).
                            Pasmo existuje proto, ze samotny tvrdy strop nestaci:
-                           varka spawnuta na 170k skonci klidne na 230k+.
+                           varka spawnuta na 220k skonci klidne na 300k+.
                            Marker = artefakt vedome volby, stejna filozofie jako
                            `model` v guard_agent_model_routing.py.
-  ctx >= 175k           -> tvrdy DENY, marker nepomaha. Nad prahem se uz nic
+  ctx >= 230k           -> tvrdy DENY, marker nepomaha. Nad prahem se uz nic
                            nerozjizdi: dojed rozdelane, stav do ledgeru/handoffu,
                            ZASTAV a cekej na `/clear`.
 
@@ -61,7 +61,10 @@ import json
 import sys
 from hook_io import context_tokens, read_payload, session_closing
 
-BAND, HARD = 150_000, 175_000  # 08-16: srovnano s kontext-watch (175k = FINIS, zadna nova fronta)
+BAND, HARD = (
+    200_000,
+    230_000,
+)  # 09-22: Opus 5.5 x1,3 (drive 150k/175k, 08-16 srovnano s kontext-watch)
 MARKER = "[SPAWN-GATE-OK]"
 GATED_TOOLS = {"Agent", "Workflow"}
 

@@ -60,9 +60,15 @@ input`) a při překročení prahu vloží modelu instrukci:
 
 | práh | název | co to znamená |
 |---|---|---|
-| **175k** | FINIŠ | Dotáhni rozdělaný celek. **Neotvírej nové fronty** — nový task, další kolo review, deploy = nová session. Ledger drž aktuální. |
-| **215k** | CLEAR | Už jen nezbytnost. Počkej na běžící subagenty, zapiš jejich výsledky do ledgeru, nabídni `/clear`. Strop je 230k. |
-| **250k** | SELHÁNÍ | Protokol selhal. Zapiš, stop. Žádná „ještě jedna věc". |
+| **230k** | FINIŠ | Dotáhni rozdělaný celek. **Neotvírej nové fronty** — nový task, další kolo review, deploy = nová session. Ledger drž aktuální. |
+| **280k** | CLEAR | Už jen nezbytnost. Počkej na běžící subagenty, zapiš jejich výsledky do ledgeru, nabídni `/clear`. Strop je 300k. |
+| **325k** | SELHÁNÍ | Protokol selhal. Zapiš, stop. Žádná „ještě jedna věc". |
+
+> 💡 **Proč zrovna tahle čísla (aktualizace 2026-09-22):** Opus 5.5 účtuje
+> cache read $0,20/MTok místo $0,50 u Opus 5 — kontext se nese 2,5× levněji,
+> takže prahy šly nahoru ×1,3 (konzervativně, ne plný přepočet). Jedeš na
+> Opus 5 nebo na dražším cache-read ceníku? Vrať se na původní hodnoty:
+> `T1/T2/T3 = 175k/215k/250k` a spawn gate `BAND/HARD = 150k/175k`.
 
 **Hook běží na dvou eventech, a to je podstatné.** Původně jel jen na
 `UserPromptSubmit`, tedy fajrnul, až když člověk něco napsal. Během autonomního
@@ -139,11 +145,11 @@ subagentovi, ne hlavnímu kontextu.
 ### Pilíř 4 — Guardy proti drahým omylům
 
 - **`guard_spawn_gate.py`** — nespawnuj vlnu, kterou už nedokážeš dosedět.
-  `< 150k` ticho · `150–175k` DENY bez markeru vědomé volby · `≥ 175k` tvrdý DENY.
+  `< 200k` ticho · `200–230k` DENY bez markeru vědomé volby · `≥ 230k` tvrdý DENY.
   Brána je záměrně u **nájezdu**, ne u přistání: drain 4 reportů stojí ~2k tokenů
   (nic), ale endgame po něm je 50+ callů hlavní smyčky, každý přeplácí celý
-  kontext — to je ta cesta z 280k na 350k. V pásmu 150–175k se dá spawn protlačit
-  markerem `[SPAWN-GATE-OK]` v promptu agenta (artefakt vědomé volby); nad 175k
+  kontext — to je ta cesta z 280k na 350k. V pásmu 200–230k se dá spawn protlačit
+  markerem `[SPAWN-GATE-OK]` v promptu agenta (artefakt vědomé volby); nad 230k
   už marker nepomůže. Guard má výjimku pro zavírání session.
 - **`guard_read_before_search.py`** — zastaví čtení celého velkého souboru bez
   `offset`/`limit` a **rovnou v deny hlášce doručí kostru souboru s čísly řádků**
@@ -217,9 +223,9 @@ hooky se tiše přeskočí a Claude Code jede dál (fail-open).
    automaticky. Nemusíš vysvětlovat, kde jste skončili.
 2. **Během práce** — po každém uzavřeném kroku jde jeden řádek do ledgeru.
    Mechanika (logy, git, průzkum) jde na sonnet subagenta.
-3. **~175k** — hook řekne FINIŠ. Dotáhne se rozdělaný celek, nic nového se
+3. **~230k** — hook řekne FINIŠ. Dotáhne se rozdělaný celek, nic nového se
    neotvírá.
-4. **~215k** — hook řekne CLEAR. Dobíhající subagenti se dosedí, výsledky do
+4. **~280k** — hook řekne CLEAR. Dobíhající subagenti se dosedí, výsledky do
    ledgeru, pak `/clear`.
 5. **Po `/clear`** — nová session si ledger načte a pokračuje. Kontext je zpátky
    na ~45k, tj. v nejlevnějším pásmu.
@@ -238,7 +244,7 @@ z ledgeru.
 | kde | co |
 |---|---|
 | `context_size_warning.py` | `T1/T2/T3` prahy. Nastavené na 1M kontextové okno; při 200k okně je zmenši úměrně (např. 120/150/175k). |
-| `guard_spawn_gate.py` | pásma 150k/175k — stejná úvaha |
+| `guard_spawn_gate.py` | pásma 200k/230k — stejná úvaha |
 | `guard_read_before_search.py` | `INDEXED_ROOTS` — vyplň, jen když máš semantický search MCP server. Prázdné = pravidlo „kostra" funguje dál. |
 | `guard_heavy_skill_delegation.py` | `HEAVY_SKILLS` — rozšiřuj podle měření, ne podle pocitu |
 | `guard_agent_model_routing.py` | názvy modelů v nápovědě routingu |
