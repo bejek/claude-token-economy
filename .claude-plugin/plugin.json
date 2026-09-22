@@ -1,7 +1,7 @@
 {
   "name": "token-economy",
   "description": "Hooky, které hlídají velikost session a nutí model šetřit kontext: varování na růst kontextu, guard proti runaway smyčkám, model-routing pro subagenty, spawn gate, ledger disciplína a injekce session ledgeru po /clear.",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "author": {
     "name": "bejek"
   },
