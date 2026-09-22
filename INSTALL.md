@@ -63,7 +63,7 @@ Soubory a jejich role:
 |---|---|
 | `hook_io.py` | **sdílená knihovna, bez ní nefunguje nic** — UTF-8 streamy, parsování payloadu, měření kontextu z transkriptu, detekce zavírání session |
 | `write_intent.py` | složení výsledného obsahu souboru z payloadu (dependency ledger guardu) |
-| `context_size_warning.py` | tři prahy kontextu (175k/215k/250k) — **jádro celé sady** |
+| `context_size_warning.py` | tři prahy kontextu (230k/280k/325k) — **jádro celé sady** |
 | `inject_session_ledger.py` | injektuje ledger na startu session |
 | `guard_session_ledger.py` | drží ledger v roli štítku (≤ 3 000 zn.) |
 | `guard_spawn_gate.py` | nespawnuj vlnu, kterou nedosedíš |
@@ -121,14 +121,16 @@ Když validace selže, **vrať zálohu** a řekni to uživateli.
 
 ## Krok 5 — Doladit prahy podle kontextového okna
 
-Prahy v `context_size_warning.py` (`T1=175_000`, `T2=215_000`, `T3=250_000`) jsou
-nastavené pro **1M kontextové okno**. Uživatelům s 200k oknem nesedí.
+Prahy v `context_size_warning.py` (`T1=230_000`, `T2=280_000`, `T3=325_000`) jsou
+nastavené pro **1M kontextové okno** a pro Opus 5.5 ceník (cache read
+$0,20/MTok). Uživatelům s 200k oknem nesedí; uživatel na Opus 5 nebo dražším
+cache-read ceníku ať zváží návrat na 175k/215k/250k (viz README).
 
 **Zeptej se uživatele, jaké má kontextové okno**, a podle toho:
 
 | okno | `T1` / `T2` / `T3` | spawn gate `BAND` / `HARD` |
 |---|---|---|
-| 1M | 175k / 215k / 250k (beze změny) | 150k / 175k |
+| 1M | 230k / 280k / 325k (beze změny) | 200k / 230k |
 | 200k | 120k / 150k / 175k | 100k / 120k |
 
 Když uživatel neví, nech výchozí a řekni mu, kde se to mění.

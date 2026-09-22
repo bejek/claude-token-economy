@@ -10,19 +10,20 @@ PROC TO STOJI ZA TO (mereno 2026-07-25, 652 session):
   53,8 % celkovych nakladu je cache-read = kontext placeny znovu KAZDYM callem.
 Detail: `feedback_token_economy` v memory.
 
-TRI PRAHY (2026-08-16, po incidentu "Deploy go na 220k"):
-  175k  FINIS   -> jen model: dotahni rozdelany celek, neotvirej nove fronty,
+TRI PRAHY (2026-08-16, po incidentu "Deploy go na 220k"; 2026-09-22 posunuto
+x1,3 kvuli Opus 5.5 -- levnejsi cache read, viz README):
+  230k  FINIS   -> jen model: dotahni rozdelany celek, neotvirej nove fronty,
                    ledger aktualni. (Nova prace = nova session.)
-  215k  CLEAR   -> model + uzivatel: jen nezbytne; pockej na bezici subagenty,
+  280k  CLEAR   -> model + uzivatel: jen nezbytne; pockej na bezici subagenty,
                    zapis jejich vysledky do ledgeru, nabidni /clear.
-                   STROP je 230k — deploy/vetsi endgame patri do nove session.
-  250k  SELHANI -> protokol selhal; zapis, ping, STOP. Zadna "jeste jedna vec".
+                   STROP je 300k — deploy/vetsi endgame patri do nove session.
+  325k  SELHANI -> protokol selhal; zapis, ping, STOP. Zadna "jeste jedna vec".
 
 PROC DVA EVENTY: do 08-16 bezel jen na UserPromptSubmit, tj. fajrnul az kdyz
 uzivatel neco napsal. Behem autonomniho behu (subagenti, endgame, deploy priprava)
 mlcel — presne tam, kde byl potreba. PostToolUse ho slysi i uprostred behu.
 Na PostToolUse je THROTTLE (state file per session): hlasi jen pri PREKROCENI
-prahu (a nad 250k kazdych +25k), ne po kazdem callu.
+prahu (a nad 325k kazdych +25k), ne po kazdem callu.
 
 Ground truth = `usage` posledniho assistant zaznamu v transcriptu
 (cache_read + cache_creation + input) — viz hook_io.context_tokens.
@@ -38,7 +39,7 @@ from pathlib import Path
 
 from hook_io import context_tokens, read_payload
 
-T1, T2, T3 = 175_000, 215_000, 250_000  # FINIS / CLEAR / SELHANI
+T1, T2, T3 = 230_000, 280_000, 325_000  # FINIS / CLEAR / SELHANI (09-22: Opus 5.5 x1,3)
 T3_STEP = 25_000  # nad T3 pripominej kazdych +25k
 
 MSG = {
@@ -46,17 +47,17 @@ MSG = {
         "Kontext ~{k}k = FINIŠ. Dotáhni rozdělaný logický celek, NEOTVÍREJ nové "
         "fronty (nový task, další review kolo, deploy = nová session). Ledger "
         "(`docs/session-ledger.md`) drž aktuální — po každém "
-        "uzavřeném kroku, ne až při clearu. Cíl: /clear kolem 200–215k."
+        "uzavřeném kroku, ne až při clearu. Cíl: /clear kolem 260–280k."
     ),
     T2: (
         "Kontext ~{k}k = CLEAR. Už jen nezbytnost: (1) počkej na VŠECHNY běžící "
         "subagenty a jejich výsledky ZAPIŠ do ledgeru (v nové session je neopakujeme), "
         "(2) dokonči atomickou operaci (ne endgame — merge/deploy/50 callů patří do "
         "nové session), (3) NABÍDNI `/clear` a UKONČI TURN (čekáš na uživatele). "
-        "STROP 230k. Nikdy nenabízej clear s agenty v letu."
+        "STROP 300k. Nikdy nenabízej clear s agenty v letu."
     ),
     T3: (
-        "Kontext ~{k}k = SELHÁNÍ PROTOKOLU (mělo se clearovat na 215k). Okamžitě: "
+        "Kontext ~{k}k = SELHÁNÍ PROTOKOLU (mělo se clearovat na 280k). Okamžitě: "
         "ledger + STOP. Žádná „ještě jedna rychlá věc“. Pokračování "
         "existuje jediné: `/clear` + „pokračuj“."
     ),
@@ -121,9 +122,8 @@ def main() -> int:
     # Uzivateli to ukaz az od CLEAR prahu — FINIS je jen pro model,
     # aby mu status line necvakala hlaskou, kterou uz sam vidi.
     if tier >= T2:
-        out["systemMessage"] = (
-            f"⚠️ Kontext ~{ctx // 1000}k tokenů — čas na /clear"
-            + (" (SELHÁNÍ PROTOKOLU)" if tier >= T3 else "")
+        out["systemMessage"] = f"⚠️ Kontext ~{ctx // 1000}k tokenů — čas na /clear" + (
+            " (SELHÁNÍ PROTOKOLU)" if tier >= T3 else ""
         )
     print(json.dumps(out, ensure_ascii=False))
     return 0
