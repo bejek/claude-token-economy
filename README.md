@@ -315,7 +315,6 @@ Cílem je cesta k pluginu, ne k `evals/` — tím se zapne baseline arm a každ�
 se spustí dvakrát, s pluginem a bez něj. Podrobnosti a jak číst výsledek:
 `evals/README.md`.
 
-> ⚠️ `claude plugin eval` je zatím **early access** a zapíná se per organizace.
-> Suite je napsaná podle schématu, ale **nebyla spuštěna** — bez zapnutého
-> evalu příkaz jen vypíše `plugin eval is currently in early access`.
-> Než ji zapojíš do CI, pusť ji jednou lokálně.
+> ✅ `claude plugin eval` na našem účtu od CLI 2.1.296 běží (2026-10-10, ~$0,8 za suite).
+> První běh: 3 cases, Δ with/without viz `evals/README.md`. Přemrštěně malý vzorek
+> (2–3 běhy na case) — bereš to jako smoke test, ne jako měření účinnosti.
