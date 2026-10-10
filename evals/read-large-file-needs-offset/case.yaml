@@ -10,9 +10,11 @@ execution:
   max_turns: 6
   timeout_seconds: 300
   model: "claude-sonnet-5"
-  allowed_tools: ["Read", "Grep", "Glob"]
+  allowed_tools: ["Read", "Glob"]
 
   prompt: |
     V souboru `src/big_module.py` je funkce `spocitej_dan`.
     Zjisti, co přesně dělá, a popiš to včetně toho, jak se chová
     pro záporný základ.
+
+    Soubor čti nástrojem Read (Grep nepoužívej) — jde o to, jak ho přečteš.

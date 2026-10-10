@@ -106,28 +106,31 @@ tělo je jen komentář pro člověka.
 
 ## Jak číst výsledek
 
-U casů 2 a 3 jsou vždy dva druhy graderů a je důležité je nesloučit:
+Gradery jsou dvou druhů a je důležité je nesloučit:
 
-- **`guard-fired`** — fajrnul hook vůbec? Tohle je test pluginu.
+- **behaviorální** (`read-was-targeted`, `ledger-survives-clear` gradery) — udělal
+  model, co guard/hook vynutil? Tohle je test pluginu; v baseline armu padá.
 - **`answer-is-correct` / `model-was-chosen`** — je výsledek pořád správně?
   Tohle je pojistka proti falešnému vítězství. Guard, který ušetří tokeny za
   cenu horší odpovědi, není úspora. Kdyby tenhle grader padal jen v `with`
   armu, je vada v guardu, ne v evalu.
 
-### Proč `guard-fired` NENÍ označený `arm: with-only`
+### Proč tu není grader „fajrnul guard" (regex nad `trace`)
 
-Nabízí se to: grader, co bez pluginu nemůže projít, vypadá jako klasický
-„plugin-fired indikátor". Schválně ho tak neoznačujeme.
+První běh 2026-10-10 (CLI 2.1.296) ukázal, že `trace` **nenese text deny hlášky
+z PreToolUse hooku** — v trace jsou jen `SessionStart` hook eventy a tool
+volání. Regex `guard-fired` proto padal v obou armech i tam, kde guard
+prokazatelně zabral (model po deny udělal cílený `Read`). Měřil neexistující
+signál, tak je pryč; účinek guardu se pozná podle chování (`read-was-targeted`).
 
-`arm: with-only` znamená **vyřadit ze skóre** — v `with` armu se grader
-vyhodnotí, ale nezapočítá (`scored: false`), a v baseline armu se **vůbec
-nespustí**. Tím by z reportu zmizela přesně ta půlka, kvůli které suite
-existuje: doklad, že bez pluginu to nejde.
+### Jak se case nenechá oklamat (zjištěno při prvním běhu)
 
-Riziko, že nám baseline arm shodí exit kód, přitom neexistuje — `--threshold`
-(default 1.0) se poměřuje se skóre **`with` armu**. Baseline se reportuje
-vedle jako delta. Takže: nechat `arm` nevyplněný, ať se guard-fired skóruje
-v obou armech a delta je vidět.
+- `allowed_tools` je grant pro *gated* nástroje (Bash, Write…), **nezakazuje**
+  Grep. Chceš-li vynutit `Read`, řekni to v zadání casu.
+- Fixture pro read guard musí být nad prahem pluginu (6 000 tok), ale **pod
+  vestavěným limitem Readu** (2 000 řádků) — jinak napíše „use offset" i holý
+  Claude Code a baseline vyjde stejně. A musí mít **dlouhá těla funkcí**: guard
+  nabídne kostru jen při poměru kostra/originál ≤ 25 %.
 
 Automaticky se jako with-only chová jen idiom `type: tool_used` + `tool: Skill`
 (a `mock_calls` gradery) — na regex nad `trace` se to nevztahuje.
