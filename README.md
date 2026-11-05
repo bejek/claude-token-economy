@@ -56,19 +56,44 @@ Proto je `context_size_warning.py` nejdůležitější kus téhle sady.
 
 Hook `context_size_warning.py` měří skutečnou velikost kontextu (z `usage`
 posledního assistant záznamu v transkriptu: `cache_read + cache_creation +
-input`) a při překročení prahu vloží modelu instrukci:
+input`) a při překročení prahu vloží modelu instrukci. Čísla určuje **profil**
+(viz níž), výchozí je A:
 
-| práh | název | co to znamená |
-|---|---|---|
-| **230k** | FINIŠ | Dotáhni rozdělaný celek. **Neotvírej nové fronty** — nový task, další kolo review, deploy = nová session. Ledger drž aktuální. |
-| **280k** | CLEAR | Už jen nezbytnost. Počkej na běžící subagenty, zapiš jejich výsledky do ledgeru, nabídni `/clear`. Strop je 300k. |
-| **325k** | SELHÁNÍ | Protokol selhal. Zapiš, stop. Žádná „ještě jedna věc". |
+| práh | A | B | co to znamená |
+|---|---|---|---|
+| FINIŠ | **230k** | **305k** | Dotáhni rozdělaný celek. **Neotvírej nové fronty** — nový task, další kolo review, deploy = nová session. Ledger drž aktuální. |
+| CLEAR | **280k** | **375k** | Už jen nezbytnost. Počkej na běžící subagenty, zapiš jejich výsledky do ledgeru, nabídni `/clear`. |
+| strop | 300k | 400k | Za ním se nepracuje (jen text hlášek, žádný vlastní práh). |
+| SELHÁNÍ | **325k** | **435k** | Protokol selhal. Zapiš, stop. Žádná „ještě jedna věc". |
+| spawn gate | 200k / 230k | 265k / 305k | pásmo s markerem / tvrdý deny (`guard_spawn_gate.py`) |
 
-> 💡 **Proč zrovna tahle čísla (aktualizace 2026-09-22):** Opus 5.5 účtuje
+#### Profily prahů — A, nebo B?
+
+- **A (výchozí, konzervativní)** — předplatné, kde ti kvóta občas dojde, nebo
+  když nevíš. Tohle je to, co plugin dělal do 0.3.0.
+- **B (volnější, ×4/3)** — Opus 5.5 (levnější cache read) a praxe, ve které ti
+  delší session usage neporážejí. Autor na B jede od 2026-10-07 bez problému
+  s 5h oknem; je to ale **jeho praxe, ne měření** — B si vyber, až když na A
+  narážíš (clear moc často, rozbitá práce), ne preventivně.
+
+Profil se volí proměnnou prostředí v `~/.claude/settings.json`:
+
+```json
+{ "env": { "TOKEN_ECONOMY_PROFILE": "B" } }
+```
+
+Proč env a ne konstanta v kódu: plugin update přepíše nainstalovanou kopii
+i s tvou úpravou. Neznámá nebo prázdná hodnota = A (při překlepu radši
+přísnější). Změna platí od dalšího promptu, restart není potřeba. Obě čísla
+žijí na jediném místě — `PROFILES` v `scripts/hook_io.py` — aby se varování
+a spawn gate nemohly rozejít.
+
+> 💡 **Proč zrovna tahle čísla (profil A, aktualizace 2026-09-22):** Opus 5.5 účtuje
 > cache read $0,20/MTok místo $0,50 u Opus 5 — kontext se nese 2,5× levněji,
 > takže prahy šly nahoru ×1,3 (konzervativně, ne plný přepočet). Jedeš na
 > Opus 5 nebo na dražším cache-read ceníku? Vrať se na původní hodnoty:
-> `T1/T2/T3 = 175k/215k/250k` a spawn gate `BAND/HARD = 150k/175k`.
+> `175k/215k/250k` a spawn gate `150k/175k` (úprava `PROFILES` v `hook_io.py`,
+> přepíše ji update — viz sekce 5).
 
 **Hook běží na dvou eventech, a to je podstatné.** Původně jel jen na
 `UserPromptSubmit`, tedy fajrnul, až když člověk něco napsal. Během autonomního
@@ -145,12 +170,13 @@ subagentovi, ne hlavnímu kontextu.
 ### Pilíř 4 — Guardy proti drahým omylům
 
 - **`guard_spawn_gate.py`** — nespawnuj vlnu, kterou už nedokážeš dosedět.
-  `< 200k` ticho · `200–230k` DENY bez markeru vědomé volby · `≥ 230k` tvrdý DENY.
+  Profil A: `< 200k` ticho · `200–230k` DENY bez markeru vědomé volby · `≥ 230k`
+  tvrdý DENY (profil B: 265k / 305k).
   Brána je záměrně u **nájezdu**, ne u přistání: drain 4 reportů stojí ~2k tokenů
   (nic), ale endgame po něm je 50+ callů hlavní smyčky, každý přeplácí celý
-  kontext — to je ta cesta z 280k na 350k. V pásmu 200–230k se dá spawn protlačit
-  markerem `[SPAWN-GATE-OK]` v promptu agenta (artefakt vědomé volby); nad 230k
-  už marker nepomůže. Guard má výjimku pro zavírání session.
+  kontext — to je ta cesta z 280k na 350k. V pásmu se dá spawn protlačit
+  markerem `[SPAWN-GATE-OK]` v promptu agenta (artefakt vědomé volby); nad
+  tvrdým prahem už marker nepomůže. Guard má výjimku pro zavírání session.
 - **`guard_read_before_search.py`** — zastaví čtení celého velkého souboru bez
   `offset`/`limit` a **rovnou v deny hlášce doručí kostru souboru s čísly řádků**
   (3–13 % velikosti originálu, vyrobí se za 1,5 ms). Deny, které nabízí náhradu,
@@ -223,9 +249,9 @@ hooky se tiše přeskočí a Claude Code jede dál (fail-open).
    automaticky. Nemusíš vysvětlovat, kde jste skončili.
 2. **Během práce** — po každém uzavřeném kroku jde jeden řádek do ledgeru.
    Mechanika (logy, git, průzkum) jde na sonnet subagenta.
-3. **~230k** — hook řekne FINIŠ. Dotáhne se rozdělaný celek, nic nového se
+3. **~230k** (profil B 305k) — hook řekne FINIŠ. Dotáhne se rozdělaný celek, nic nového se
    neotvírá.
-4. **~280k** — hook řekne CLEAR. Dobíhající subagenti se dosedí, výsledky do
+4. **~280k** (profil B 375k) — hook řekne CLEAR. Dobíhající subagenti se dosedí, výsledky do
    ledgeru, pak `/clear`.
 5. **Po `/clear`** — nová session si ledger načte a pokračuje. Kontext je zpátky
    na ~45k, tj. v nejlevnějším pásmu.
@@ -243,8 +269,8 @@ z ledgeru.
 
 | kde | co |
 |---|---|
-| `context_size_warning.py` | `T1/T2/T3` prahy. Nastavené na 1M kontextové okno; při 200k okně je zmenši úměrně (např. 120/150/175k). |
-| `guard_spawn_gate.py` | pásma 200k/230k — stejná úvaha |
+| `settings.json` → `env.TOKEN_ECONOMY_PROFILE` | profil prahů `A` (výchozí) / `B` — viz Pilíř 1. Přežije update. |
+| `hook_io.py` → `PROFILES` | vlastní čísla (např. 200k okno: FINIŠ/CLEAR/SELHÁNÍ 120/150/175k, spawn 100/120k). ⚠️ Plugin update úpravu přepíše — profily jsou pro 1M okno. |
 | `guard_read_before_search.py` | `INDEXED_ROOTS` — vyplň, jen když máš semantický search MCP server. Prázdné = pravidlo „kostra" funguje dál. |
 | `guard_heavy_skill_delegation.py` | `HEAVY_SKILLS` — rozšiřuj podle měření, ne podle pocitu |
 | `guard_agent_model_routing.py` | názvy modelů v nápovědě routingu |

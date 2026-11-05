@@ -24,8 +24,47 @@ skriptu je sys.path[0] a `from hook_io import read_payload` funguje bez triku.
 """
 
 import json
+import os
 import re
 import sys
+
+# PRAHY KONTEXTU -- jediny zdroj pravdy pro kontext-watch i spawn branu. Driftujici
+# kopie ve dvou hoocich = dve ruzna "kolik mam kontextu" a guard prestane platit
+# presne tam, kde je nejvic potreba. Cisla jsou MERENI, ne preference (README).
+#   A = konzervativni: predplatne, kde kvota obcas dojde (vychozi).
+#   B = volnejsi: Opus 5.5 (levnejsi cache read) a praxe bez problemu s usage.
+# Volba: env `TOKEN_ECONOMY_PROFILE=A|B` (v settings.json `env`). Proc ne konstanta
+# v kodu: plugin update by uzivateluv zasah v nainstalovane kopii prepsal.
+# Neznama hodnota -> A (fail-safe = prisnejsi). NEPREPOCITAVEJ na procenta okna.
+PROFILES = {
+    "A": {
+        "spawn_band": 200_000,
+        "spawn_hard": 230_000,
+        "finish": 230_000,
+        "clear": 280_000,
+        "cap": 300_000,
+        "fail": 325_000,
+    },
+    "B": {
+        "spawn_band": 265_000,
+        "spawn_hard": 305_000,
+        "finish": 305_000,
+        "clear": 375_000,
+        "cap": 400_000,
+        "fail": 435_000,
+    },
+}
+DEFAULT_PROFILE = "A"
+
+
+def profile_name() -> str:
+    """Aktivni profil z env `TOKEN_ECONOMY_PROFILE`; neznamy/prazdny -> A."""
+    name = (os.environ.get("TOKEN_ECONOMY_PROFILE") or "").strip().upper()
+    return name if name in PROFILES else DEFAULT_PROFILE
+
+
+T = PROFILES[profile_name()]
+
 
 _CMD_RE = re.compile(r"<command-name>\s*(/[\w:.-]+)")
 # Commandy, ktere zaciname novou generaci kontextu -- viz session_closing().

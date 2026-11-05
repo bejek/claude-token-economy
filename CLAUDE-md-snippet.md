@@ -9,10 +9,12 @@
   pásmu do 50k). Session s peakem >300k stojí medián 27× víc než session
   s peakem <150k.
 - **Kontext nevidím** — nemám živý čítač. Hlásí ho hook `context_size_warning`:
-  **230k FINIŠ** = dotáhni rozdělaný celek, žádná nová fronta (nový task, další
-  kolo review, deploy = nová session) · **280k CLEAR** = dočkat běžící
+  **FINIŠ** = dotáhni rozdělaný celek, žádná nová fronta (nový task, další
+  kolo review, deploy = nová session) · **CLEAR** = dočkat běžící
   subagenty → zapsat jejich výsledky do ledgeru → nabídnout `/clear` ·
-  **strop 300k**. Nad 325k protokol selhal: zapiš, stop, žádná „ještě jedna věc".
+  **strop**. Nad SELHÁNÍ protokol selhal: zapiš, stop, žádná „ještě jedna věc".
+  Čísla podle profilu (`TOKEN_ECONOMY_PROFILE`): **A** 230k / 280k / strop 300k /
+  325k · **B** 305k / 375k / strop 400k / 435k — nech tu jen řádek svého profilu.
 - **Ledger je default pro každý netriviální task:** `<repo>/docs/session-ledger.md`,
   zápis **po každém uzavřeném kroku**, ne až při clearu. Cíl je jediný: aby šlo
   dát `/clear` kdykoliv po cestě a nic se neztratilo.

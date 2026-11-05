@@ -62,6 +62,18 @@ else
     done
 fi
 
+echo "== 5. profil prahů z env TOKEN_ECONOMY_PROFILE =="
+for pair in "A:230000" "B:305000" "x:230000" ":230000"; do
+    prof=${pair%%:*}; want=${pair#*:}
+    got=$(cd "$ROOT/scripts" && TOKEN_ECONOMY_PROFILE="$prof" python -c 'from hook_io import T; print(T["finish"])' 2>/dev/null \
+        || TOKEN_ECONOMY_PROFILE="$prof" python3 -c 'from hook_io import T; print(T["finish"])' 2>/dev/null)
+    if [ "$got" = "$want" ]; then
+        ok "profil '$prof' -> FINIŠ $want"
+    else
+        fail "profil '$prof' -> FINIŠ '$got', čekám $want"
+    fi
+done
+
 echo
 if [ "$FAILED" -eq 0 ]; then
     echo "VŠE PROŠLO"
