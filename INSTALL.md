@@ -63,7 +63,7 @@ Soubory a jejich role:
 |---|---|
 | `hook_io.py` | **sdílená knihovna, bez ní nefunguje nic** — UTF-8 streamy, parsování payloadu, měření kontextu z transkriptu, detekce zavírání session |
 | `write_intent.py` | složení výsledného obsahu souboru z payloadu (dependency ledger guardu) |
-| `context_size_warning.py` | tři prahy kontextu (230k/280k/325k) — **jádro celé sady** |
+| `context_size_warning.py` | tři prahy kontextu podle profilu (A 230/280/325k · B 305/375/435k) — **jádro celé sady** |
 | `inject_session_ledger.py` | injektuje ledger na startu session |
 | `guard_session_ledger.py` | drží ledger v roli štítku (≤ 3 000 zn.) |
 | `guard_spawn_gate.py` | nespawnuj vlnu, kterou nedosedíš |
@@ -119,25 +119,31 @@ python -c "import json,io; json.load(io.open(r'C:/Users/<jméno>/.claude/setting
 
 Když validace selže, **vrať zálohu** a řekni to uživateli.
 
-## Krok 5 — Doladit prahy podle kontextového okna
+## Krok 5 — Profil prahů a kontextové okno
 
-Prahy v `context_size_warning.py` (`T1=230_000`, `T2=280_000`, `T3=325_000`) jsou
-nastavené pro **1M kontextové okno** a pro Opus 5.5 ceník (cache read
-$0,20/MTok). Uživatelům s 200k oknem nesedí; uživatel na Opus 5 nebo dražším
-cache-read ceníku ať zváží návrat na 175k/215k/250k (viz README).
+Prahy obou hooků (`context_size_warning.py`, `guard_spawn_gate.py`) žijí na
+jediném místě, `PROFILES` v `hook_io.py`, a volí se proměnnou prostředí
+`TOKEN_ECONOMY_PROFILE`. Oba profily jsou pro **1M kontextové okno**:
 
-**Zeptej se uživatele, jaké má kontextové okno**, a podle toho:
+| profil | FINIŠ / CLEAR / SELHÁNÍ | strop | spawn gate pásmo / tvrdě | pro koho |
+|---|---|---|---|---|
+| **A** (výchozí) | 230k / 280k / 325k | 300k | 200k / 230k | kvóta občas dojde, nebo nevíš |
+| **B** | 305k / 375k / 435k | 400k | 265k / 305k | Opus 5.5 a delší session ti usage neporážejí |
 
-| okno | `T1` / `T2` / `T3` | spawn gate `BAND` / `HARD` |
-|---|---|---|
-| 1M | 230k / 280k / 325k (beze změny) | 200k / 230k |
-| 200k | 120k / 150k / 175k | 100k / 120k |
+**Zeptej se uživatele dvě věci:** (1) jaké má kontextové okno, (2) jestli mu
+dochází kvóta předplatného. Pak:
 
-Když uživatel neví, nech výchozí a řekni mu, kde se to mění.
+- **1M okno, kvóta dochází nebo neví** → nic nenastavuj (A je výchozí).
+- **1M okno, kvóta nedochází a chce delší session** → do `~/.claude/settings.json`
+  přidej `"env": { "TOKEN_ECONOMY_PROFILE": "B" }` (sluč se stávajícím `env`,
+  nepřepisuj ho). Env, ne úprava kódu — plugin update by úpravu přepsal.
+- **200k okno** → profily nesedí. Uprav profil `A` v `PROFILES` na 120k / 150k /
+  175k (strop 160k, spawn 100k / 120k) a **řekni uživateli, že update úpravu
+  přepíše**. `spawn_hard` drž **stejné jako `finish`** (nad FINIŠ se nic
+  nerozjíždí).
 
-Analogicky uprav pásma v `guard_spawn_gate.py` — konstanty `BAND, HARD` jsou
-hned pod docstringem. `HARD` má být **stejné číslo jako `T1`** (nad prahem FINIŠ
-se už nic nerozjíždí); tenhle vztah drž i po změně.
+Ověření profilu: `TOKEN_ECONOMY_PROFILE=B python -c "import sys; sys.path.insert(0, 'scripts'); from hook_io import T; print(T)"`
+z kořene pluginu musí vypsat dict s `'finish': 305000` (bez env `230000`).
 
 ## Krok 6 — Přidej sekci do `CLAUDE.md`
 
