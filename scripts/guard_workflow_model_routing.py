@@ -36,8 +36,8 @@ INHERIT_OK = re.compile(r"inherit[-_ ]?ok", re.IGNORECASE)
 
 # Spolecny zaklad ke kazde hlasce: co je spravna volba routingu.
 ROUTING_HINT = (
-    "PORADI+CENA (MTok in/out): fable $10/$50 (STROP, 2x opus) > opus $5/$25 "
-    "(DEFAULT) > sonnet $3/$15 > haiku $1/$5. Fable NENI levna varianta a NENI "
+    "PORADI+CENA (MTok in/out): fable 5.2 $8/$40 (STROP, 2x opus) > opus 5.5 $4/$20 "
+    "(DEFAULT) > sonnet 5.5 $2/$10 > haiku 5.5 $0.10/$0.50. Fable NENI levna varianta a NENI "
     "sonnet -- je to nejdrazsi model. "
     "Default routing: mechanika/impl/review=sonnet+medium, trivialni grunt "
     "(websearch/fetch/vypis)=haiku+low, hloubka (adversarial/security/"

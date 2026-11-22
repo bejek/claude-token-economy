@@ -74,6 +74,27 @@ for pair in "A:230000" "B:305000" "x:230000" ":230000"; do
     fi
 done
 
+echo "== 6. routing hint nese aktuální ceny modelů (#3956) =="
+# Aktuální ceník (MTok in/out): Fable 5.2 $8/$40, Opus 5.5 $4/$20,
+# Sonnet 5.5 $2/$10, Haiku 5.5 $0.10/$0.50. Staré před-5.5 ceny nesmí přežít.
+for mod in guard_agent_model_routing guard_workflow_model_routing; do
+    hint=$(cd "$ROOT/scripts" && python -c "import $mod; print($mod.ROUTING_HINT)" 2>/dev/null \
+        || python3 -c "import $mod; print($mod.ROUTING_HINT)" 2>/dev/null)
+    bad=""
+    for want in '$8/$40' '$4/$20' '$2/$10' '$0.10/$0.50' '2x opus'; do
+        case "$hint" in *"$want"*) ;; *) bad="$bad chybí $want;" ;; esac
+    done
+    # rozsekané '' ať repo-grep na staré ceny nehlásí sám tenhle test
+    for old in '$10/$''50' '$5/$''25' '$3/$''15' '$1/$''5'; do
+        case "$hint" in *"$old"*) bad="$bad stará cena $old;" ;; esac
+    done
+    if [ -n "$hint" ] && [ -z "$bad" ]; then
+        ok "$mod: ceny aktuální"
+    else
+        fail "$mod:${bad:- hint se nepodařilo načíst}"
+    fi
+done
+
 echo
 if [ "$FAILED" -eq 0 ]; then
     echo "VŠE PROŠLO"
