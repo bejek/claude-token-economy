@@ -5,6 +5,7 @@ Spouští se automaticky přes Claude Code hook PostCompact.
 
 import json
 import os
+import re
 import sys
 from pathlib import Path
 
@@ -15,13 +16,13 @@ MAX_CHARS = 400  # max délka jedné zprávy (zkrácení)
 
 
 def get_project_slug(cwd: str) -> str:
-    r"""Převede cestu jako D:\Projects\csk na slug d--Projects-csk"""
-    p = Path(cwd)
-    drive = p.drive  # např. 'D:'
-    rest = str(p)[len(drive):]  # např. '\Projects\csk'
-    drive_letter = drive[0].lower()
-    rest_clean = rest.replace("\\", "-").replace("/", "-").strip("-")
-    return f"{drive_letter}--{rest_clean}"
+    r"""Převede cwd na jméno složky v ~/.claude/projects stejně jako Claude Code:
+    každý znak mimo [A-Za-z0-9] → '-'.
+
+    D:\Projects\csk → D--Projects-csk · C:\Users\x\.claude → C--Users-x--claude
+    /home/u/repo → -home-u-repo (dřív tu padal IndexError: POSIX cesta nemá drive)
+    """
+    return re.sub(r"[^A-Za-z0-9]", "-", cwd)
 
 
 def extract_text(content) -> str:
@@ -79,7 +80,9 @@ def main():
         if not text:
             continue
 
-        timestamp = entry.get("timestamp", "")[:16].replace("T", " ")  # '2026-04-12 14:37'
+        timestamp = entry.get("timestamp", "")[:16].replace(
+            "T", " "
+        )  # '2026-04-12 14:37'
         messages.insert(0, (msg_type, timestamp, text))
 
         if len(messages) >= N_MESSAGES:
@@ -99,4 +102,8 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception:
+        # fail-open: chyba hooku nesmí rozbít PostCompact
+        sys.exit(0)
