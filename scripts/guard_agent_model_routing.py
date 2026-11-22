@@ -52,8 +52,8 @@ FORK_HINT = (
 )
 
 ROUTING_HINT = (
-    "PORADI+CENA (MTok in/out): fable $10/$50 (STROP, 2x opus) > opus $5/$25 "
-    "(DEFAULT) > sonnet $3/$15 > haiku $1/$5. Fable NENI levna varianta a NENI "
+    "PORADI+CENA (MTok in/out): fable 5.2 $8/$40 (STROP, 2x opus) > opus 5.5 $4/$20 "
+    "(DEFAULT) > sonnet 5.5 $2/$10 > haiku 5.5 $0.10/$0.50. Fable NENI levna varianta a NENI "
     "sonnet -- je to nejdrazsi model, sahej po nem vedome.\n"
     "Default routing: mechanika/exploration/logy/testy/docs/git = model:'sonnet' "
     "(pripadne 'haiku' na trivialni grunt). Existuje spec/design doc/handoff -> "
