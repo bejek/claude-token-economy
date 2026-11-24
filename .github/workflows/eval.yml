@@ -45,7 +45,7 @@ jobs:
             exit 0
           fi
           set +e
-          out=$(claude plugin eval . --scaffold --json eval-results.json --no-publish 2>&1)
+          out=$(claude plugin eval . --scaffold --trust-plugin --json eval-results.json --no-publish 2>&1)
           code=$?
           set -e
           echo "$out"
